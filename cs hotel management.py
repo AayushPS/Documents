@@ -603,6 +603,18 @@ if conn.is_connected():
                     conn.commit
                     a+=1
 
+        i_3="create table if not exists floors"
+        i_4=" (floorno int(3) not null primary key, room_no int(3) not null);"
+        for i in range (1,i_ques2+1):
+            k=str(i)
+            s=i_3+k+i_4
+            executer(s)
+        i_5="create table if not exists staff"
+        i_6=" (st_id varchar(3) not null primary key, st_name varchar(20) not null,st_address longtext not null, st_phno bigint(20) not null unique, st_emailid varchar(100) not null unique, st_job varchar(20) not null,st_salary int(9) not null,st_floor int(4) not null);"
+        s=i_5+i_6
+        executer(s)
+
+
     def initiation():
         executer("create database if not exists hotels;")
         executer("Use hotels;")
@@ -626,18 +638,7 @@ if conn.is_connected():
         i_1=input("Enter your Hotel's name : ")                      # Hotel name take any!!!
         try:
             co.execute(str("use "+i_1+";"))
-        except ProgrammingError:
+        except:
             hoteldata()
-        i_3="create table if not exists floors"
-        i_4=" (floorno int(3) not null primary key, room_no int(3) not null);"
-        global i_ques2
-        for i in range (1,i_ques2+1):
-            k=str(i)
-            s=i_3+k+i_4
-            executer(s)
-        i_5="create table if not exists staff"
-        i_6=" (st_id varchar(3) not null primary key, st_name varchar(20) not null,st_address longtext not null, st_phno bigint(20) not null unique, st_emailid varchar(100) not null unique, st_job varchar(20) not null,st_salary int(9) not null,st_floor int(4) not null);"
-        s=i_5+i_6
-        executer(s)
         login()
     initiation()
