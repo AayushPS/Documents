@@ -1,5 +1,3 @@
-from asyncio import exceptions
-from sqlite3 import ProgrammingError
 import mysql.connector as m
 import time
 conn=m.connect(host='localhost',user='root',passwd='190404')
@@ -47,8 +45,7 @@ if conn.is_connected():
         c_date=input("Enter Check in Date in format yyyy-mm-dd : ")
         stayingdate=int(input("Enter no. of days you wish to stay : "))
         r_type=roomtype
-        rno=int(floor[5:])*10 +c-2+(r_type*2)
-        executer("select * from "+floor+" where room_no="+str(rno)+";")
+        executer("select Check_in_date, Day_Duration from "+floor+" where room_no="+str(rno)+";")
         if len(allfetcher())==0:
             pass
         else:
@@ -204,11 +201,10 @@ if conn.is_connected():
         while True:
             print()
             i_ques3=int(input("Enter the type of room you are looking for : "))
-            i_ques4='floor'+input("Enter the floor you want a room at. : ")
-            executer('select * from '+i_ques4+';')
-            val=allfetcher()
-            global c
-            c=0
+            i_ques4=input("Enter the floor you want a room at. : ")
+            for i in range(0,i_ques4):
+                executer('select * from '';')
+
             for i in val:
                 if i[-3]==i_ques3:
                     c+=1
@@ -604,7 +600,7 @@ if conn.is_connected():
                     a+=1
 
         i_3="create table if not exists floors"
-        i_4=" (floorno int(3) not null primary key, room_no int(3) not null);"
+        i_4=" (floor int(3) not null primary key, room_no int(3) not null, room_type int(1) not null );"
         for i in range (1,i_ques2+1):
             k=str(i)
             s=i_3+k+i_4
