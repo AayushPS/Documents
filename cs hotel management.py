@@ -202,9 +202,14 @@ if conn.is_connected():
             print()
             i_ques3=int(input("Enter the type of room you are looking for : "))
             i_ques4=input("Enter the floor you want a room at. : ")
-            for i in range(0,i_ques4):
-                executer('select * from '';')
-
+            ab="select room_no from floors where room_type={} and floor={}".format(i_ques3,i_ques4)
+            executer(ab)
+            c=allfetcher()
+            for i in c:
+                gk=c[i]
+                executer('select Check_in_date, Day_duration from room{};'.format(gk))
+                fk=allfetcher()
+                
             for i in val:
                 if i[-3]==i_ques3:
                     c+=1
@@ -586,25 +591,23 @@ if conn.is_connected():
             if ord(i) in (49,50,51,52,53):
                 k.append(i)
                 m=m+1
-        executer("create table hotel(n_floors int(3) NOT NULL, roomperfloor int(3) NOT NULL, roomtypes int(1) Default '5' check (roomtypes<6);")
-        kl="insert into hotel(n_floors, roomperfloor, roomtypes) values('{}',{},{},{})".format(i_ques2,n_roomperfloorpertype,k)
+        k.sort()
+        executer("create table hotel(n_floors integer(3) NOT NULL, roomperfloor integer(3) NOT NULL, roomtypes integer(1) check (roomtypes<6));")
+        kl="insert into hotel(n_floors, roomperfloor, roomtypes) values({},{},'{}')".format(i_ques2,n_roomperfloorpertype,k)
         conn.commit()
         a=1
+        i_3="create table if not exists floors(floor int(3) not null primary key, room_no int(3) not null, room_type int(1) not null );"
+        executer(i_3)
         for i in range (1,i_ques2+1):
             for j in range (1,n_roomperfloorpertype+1):
                 for e in range (1,1+m):
-                    s=str("create table room"+a+"(cust_name varchar(20), cust_address longtext, ph_no bigint(20) unique, c_email varchar(100) unique, room_type int(1) not null, floor int(2) not null, Check_in_date date, Day_duration int(5));")
+                    a=str(a)
+                    s="create table room"+a+"(cust_name varchar(20), cust_address longtext, ph_no bigint(20) unique, c_email varchar(100) unique, room_type int(1) not null default({}), floor int(2) not null defalult({}), Check_in_date date, Day_duration int(5));.".format(j,i)
                     executer(s)
-                    executer("insert into room"+a+"(room_type,floor) values({},{})".format(j,i))
-                    conn.commit
+                    a=int(a)
+                    d="insert into floors(floor,room_no,room_type) values({},{},{})".format(i,a,j)
+                    executer(d)
                     a+=1
-
-        i_3="create table if not exists floors"
-        i_4=" (floor int(3) not null primary key, room_no int(3) not null, room_type int(1) not null );"
-        for i in range (1,i_ques2+1):
-            k=str(i)
-            s=i_3+k+i_4
-            executer(s)
         i_5="create table if not exists staff"
         i_6=" (st_id varchar(3) not null primary key, st_name varchar(20) not null,st_address longtext not null, st_phno bigint(20) not null unique, st_emailid varchar(100) not null unique, st_job varchar(20) not null,st_salary int(9) not null,st_floor int(4) not null);"
         s=i_5+i_6
