@@ -62,10 +62,12 @@ if conn.is_connected():
         os=int(input("Your choice : "))
         print()
         print()
-        s="select n_floors,roomperfloorpertype,roomtypes from hotel"
+        executer("use hotels;")
+        s="select n_floors,roomperfloorpertype,roomtypes from hotel;"
         j=allfetcher()
         nr=j[0][0]*j[0][1]*j[0][2] #no. of rooms
         nf=j[0][0]
+        executer("use {}".format(i_1))
         if os==1:
             data_found=0
             for i in range(1,nr+1):
@@ -76,9 +78,12 @@ if conn.is_connected():
                 elif len(k)!=0:
                     new_var=1
                     data_found=1
-                    print("• This is the data for room",i)
-                    print("Customer Name|Customer Address|Phone No.|Email ID|Room Type|FLoor|Check in date|Expected checkout date|Checkout status|\n")
-                    print(k[-1])
+                    if k[-1][-1]=='no':
+                        print("\t\tThis is the data for room",i)
+                        print("Customer Name|Customer Address|Phone No.|Email ID|Room Type|FLoor|Check in date|Expected checkout date|Checkout status|\n")
+                        print(k[-1])
+                        print()
+                        print()
             if data_found==0:
                 time.sleep(0.35)
                 print("NO DATA FOUND")
@@ -86,14 +91,17 @@ if conn.is_connected():
             b=int(input("For what floor you want to access data? "))
             print()
             for i in range(1,nr+1):
-                nk="select * from room{} Natural join floors where floor.floors=floor.room{} and floor.floors={} order by room_no.floor".format(a,a,b)
+                nk="select * from room{} as r Natural join floors as f where floor.f=floor.r and floor.floors={} order by room_no.floor".format(i,b)
                 executer(nk)
                 e=allfetcher()
                 if len(e)==0:
                     print("There's no room booked at this floor right now.")
                 else:
-                    print("Customer Name|Customer Address|Phone No.|Email ID|Room Type|FLoor|Check in date|Expected checkout date|Checkout status|\n")
-                    
+                    if e[-1][-1]=='no':
+                        print("Customer Name|Customer Address|Phone No.|Email ID|Room Type|FLoor|Check in date|Expected checkout date|Checkout status|\n")
+                        print(e[-1])
+                        print()
+                        print()            
         else:
             print("Wrong input!\nGoing back to Main Menu........")
         time.sleep(1.1)
@@ -147,26 +155,35 @@ if conn.is_connected():
         input("\n\nPress Enter to Continue.......")
 
     def checkout():
-        k=input("Enter checkout date yyyy-mm-dd : ")
-        co_room=int(input("Enter your room no. : "))
-        floor_no=(co_room)//10
-        
-        query="select * from floor"+str(floor_no)+" where room_no="+str(co_room)+ " ;"
-        executer(query)
-        z=allfetcher()[0]
-        b,c,d,e,g=z[1],z[2],z[3],z[4],z[-1]
-
-        room_type1=(((co_room)%10)//2)+1
-        ratelist={1:1500, 2:2000, 3:800, 4:1100, 5:5000 }
-        l=ratelist[room_type1]*g
-        
-        m="insert into past_visitors(cust_name ,cust_address , ph_no,c_email ,Check_out_date,bill_amt) values ('{}','{}',{},'{}','{}',{})".format(b,c,d,e,k,l)
-        executer(m)
-        conn.commit()
-        x="delete from floor"+str(floor_no)+" where room_no="+str(co_room)+ " ;"
-        executer(x)
-        conn.commit()
-
+        co_room=int(input("Enter customer's room no. : "))
+        ph=int(input("Enter customer's mobile number"))
+        executer("select * from room{}".format(co_room))
+        f=allfetcher()
+        executer("select curdate()")
+        kl=allfetcher()
+        cdate=kl[0][0]
+        n=0
+        for i in f:
+            if i[-1]=="no":
+                id=i[-3]
+                rt=i[4]
+                executer("select datediff({},{})".format(kl,cdate))
+                diff=allfetcher()
+                ap=diff*roomd[rt]
+                u="update room{} set checkoutdone='yes' where ph_no={}".format(co_room,ph)
+                executer("insert into past_visitors(ph_no, Check_in_date, Expected_Checkout, Amount_payed, checkoutdate) values({},'{}','{}',{},'{}')".format(ph,i[-3],i[-2],ap,cdate))
+                conn.commit
+                break
+            else:
+                n=n+1
+        executer(u)
+        if n!=0:
+            time.sleep(0.5)
+            print("Entered deails of checkout are unmatched to current records")
+            time.sleep(1)
+            print("Returning to main menu.....")
+            input("press enter to continue")
+            return()
         time.sleep(0.5)
         print("\n\nCheckout Successful")
         time.sleep(1)
@@ -177,8 +194,8 @@ if conn.is_connected():
         print('~'*90)
         print("\t\t\tRATE LIST")    
         print("1) ",roomn[1]," : ",roomd[1],"/-\t\t\t2) ",roomn[2]," : ",roomd[2],"/- \n3) ",roomn[3]," : ",roomd[3],"/-\t\t\t4) ",roomn[4]," : ",roomd[4],"/-\n5) ",roomn[5]," : ",roomd[5],"/-")
-        i_ques3=int(input("Enter the type of room you are looking for : "))
-        i_ques4=input("Enter the floor you want a room at. : ")
+        i_ques3=int(input("Enter the type of room customer is looking for : "))
+        i_ques4=input("Enter the floor customer want a room at. : ")
         c_date=input("Enter Check in Date in format yyyy-mm-dd : ")
         y=int(c_date[0:4])
         m=int(c_date[5:7])
@@ -214,12 +231,20 @@ if conn.is_connected():
                 print()
                 input('Press Enter to continue.........')
                 receptionist()
-            elif cd[0]=='yes':
+            elif cd=='yes':
                 cust_details(c_date,i)
                 time.sleep(1)
                 print()
                 input('Press Enter to continue.........')
                 receptionist()
+            else:
+                time.sleep(1.2)
+                print("Rooms of such requirements are not available")
+                time.sleep(0.3)
+                print("please search for another room type or floor or for another checkin date")
+                time.sleep(1)
+                input("press enter to continue.............")
+                checkin()
 
     def key_change():
         new_key=input("Enter new Master Key : ")
@@ -442,6 +467,7 @@ if conn.is_connected():
         input("Press Enter to continue.........")
         
     def setprice():
+        executer("use hotels;")
         executer("select * from hotel;")
         k=allfetcher()
         c=k[0][2]
@@ -465,14 +491,31 @@ if conn.is_connected():
                 roomn[4]='Regular Room (AC)'
             elif i==5:
                 roomn[5]='Luxary 5 Star Room (AC)'
-                
+        executer("use {}".format(i_1))
+
+    def prevv():
+        executer("use hotels;")
+        executer("select * from hotel;")
+        k=allfetcher()
+        n=0
+        for i in range(1,k[0][0]+1):
+            for j in range(1,1+k[0][1]):
+                for l in k[0][2]:
+                    n=n+1
+        executer("use "+i_1+";")
+        for i in range(1,1+n):
+            executer("select * from past_visitor natural join room"+str(i)+"where ph_no.past visitor=ph_no.room"+str(i)+";")
+            dick=allfetcher()
+            for i in dick:
+                print(i)
+
     def manager():
         print('~'*90)
         print('\t\t\tMAIN MENU')
         print()
         print("Welcome Manager")
         print()
-        print("\t1)Customer Details.\t\t2)Register Staff Member. \n\t3)Staff members' details \t\t4) Update Staff Details \n\t5)Set/Update Price List for rooms   \t6) Logout \n\t7) Master key")
+        print("\t1)Customer Details.\t\t2)Register Staff Member. \n\t3)Staff members' details \t\t4) Update Staff Details \n\t5)Set/Update Price List for rooms   \t6) Logout \n\t7) Master key \t\t8) old customer data fetcher")
         print()
         ch1 = int(input("Select your choice  :  "))
         try:
@@ -512,6 +555,9 @@ if conn.is_connected():
                     pass
                 else:
                     key_change()
+                manager()
+            elif ch1==8:
+                prevv()
                 manager()
             else:
                 print("INVALID INPUT !! TRY AGAIN !!\n")
@@ -581,7 +627,7 @@ if conn.is_connected():
                 m=m+1
         k.sort()
         executer("create table hotel(n_floors integer(3) NOT NULL, roomperfloorpertype integer(3) NOT NULL, roomtypes integer(1) check (roomtypes<6));")
-        kl="insert into hotel(n_floors, roomperfloorpertype, roomtypes) values({},{},'{}')".format(i_ques2,n_roomperfloorpertype,k)
+        kl="insert into hotel(n_floors, roomperfloorpertype, roomtypes) values({},{},{})".format(i_ques2,n_roomperfloorpertype,k)
         conn.commit()
         a=1
         i_3="create table if not exists floors(floor int(3) not null primary key, room_no int(3) not null, room_type int(1) not null );"
@@ -600,8 +646,8 @@ if conn.is_connected():
         i_6=" (st_id varchar(3) not null primary key, st_name varchar(20) not null,st_address longtext not null, st_phno bigint(20) not null unique, st_emailid varchar(100) not null unique, st_job varchar(20) not null,st_salary int(9) not null,st_floor int(4) not null);"
         s=i_5+i_6
         executer(s)
-        executer("create table past_visitors as(select cust_name, cust_address, ph_no, c_email, room_type, floor, Check_in_date, Expected_checkout);")
-        executer("alter table past_visitors add(Amount_payed int(5)")
+        executer("create table past_visitors as(select ph_no, Check_in_date, Expected_checkout);")
+        executer("alter table past_visitors add(Amount_payed int(5), checkoutdate date")
 
     def initiation():
         executer("create database if not exists hotels;")
@@ -628,5 +674,8 @@ if conn.is_connected():
             co.execute(str("use "+i_1+";"))
         except:
             hoteldata()
+        finally:
+            executer("use {}".format(i_1))
         login()
+
     initiation()
